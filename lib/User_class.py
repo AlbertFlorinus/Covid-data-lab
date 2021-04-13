@@ -2,8 +2,6 @@ from setup import sql_connect
 import matplotlib.pyplot as plt
 import numpy as np
 
-
-
 class User():
 
     def __init__(self):
@@ -19,8 +17,8 @@ class User():
         Returns a np.array of selected nations confirmed cases from the DB,
         If theres multiple Provinces the numpy array is the columnwise sum of all provinces.
         """
-        all_rows = np.array(self.engine.execute(f"SELECT * FROM confirmed_global_cases where Country like '{self.nation}'").fetchall())
-        only_date_cols = all_rows[:,5:]
+        all_rows = np.array(self.engine.execute(f"SELECT * FROM confirmed where country like '{self.nation}'").fetchall())
+        only_date_cols = all_rows[:,5:].astype(int)
         self.confirmed = np.sum(only_date_cols, axis = 0)
 
     def get_country_deaths(self):
@@ -28,8 +26,8 @@ class User():
         Returns a np.array of selected nations confirmed cases from the DB,
         If theres multiple Provinces the numpy array is the columnwise sum of all provinces.
         """
-        all_rows = np.array(self.engine.execute(f"SELECT * FROM deaths_global_cases where Country like '{self.nation}'").fetchall())
-        only_date_cols = all_rows[:,5:]
+        all_rows = np.array(self.engine.execute(f"SELECT * FROM deaths where country like '{self.nation}'").fetchall())
+        only_date_cols = all_rows[:,5:].astype(int)
         self.deaths = np.sum(only_date_cols, axis = 0)
 
     def get_country_recovered(self):
@@ -37,8 +35,8 @@ class User():
         Returns a np.array of selected nations confirmed cases from the DB,
         If theres multiple Provinces the numpy array is the columnwise sum of all provinces.
         """
-        all_rows = np.array(self.engine.execute(f"SELECT * FROM recovered_global_cases where Country like '{self.nation}'").fetchall())
-        only_date_cols = all_rows[:,5:]
+        all_rows = np.array(self.engine.execute(f"SELECT * FROM recovered where country like '{self.nation}'").fetchall())
+        only_date_cols = all_rows[:,5:].astype(int)
         self.recovered = np.sum(only_date_cols, axis = 0)
 
     def plot_data(self, category = "confirmed"):
@@ -61,9 +59,9 @@ class User():
 if __name__ == "__main__":
     #example, currently prone to errors if done in another order
     User1 = User()
-    User1.select_country("Sweden")
+    User1.select_country("china")
     User1.get_country_conf()
     User1.get_country_deaths()
     User1.get_country_recovered()
 
-    User1.plot_data(category="deaths")
+    User1.plot_data(category="confirmed")
