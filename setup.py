@@ -1,7 +1,7 @@
 import pandas as pd
 from sqlalchemy import create_engine
 
-def sql_connect(password, db_name = "Corona", port = 3306):
+def sql_connect(password, db_name, port = 3306):
     engine = create_engine(f"mysql+pymysql://root:{password}@localhost:{port}/{db_name}")
     return engine
 
@@ -25,8 +25,9 @@ def recovered_to_sql(engine):
 
 if __name__ == "__main__":
     #Column Country/Region named for SQL compatability for now
+    db_name = str(input("Name of database: "))
     password = str(input("SQL root password: "))
-    engine = sql_connect(password)
+    engine = sql_connect(password, db_name)
     confirmed_to_sql(engine)
     deaths_to_sql(engine)
     recovered_to_sql(engine)
