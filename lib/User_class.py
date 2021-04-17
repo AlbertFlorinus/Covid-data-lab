@@ -1,7 +1,7 @@
 from setup import sql_connect
 import matplotlib.pyplot as plt
 import numpy as np
-print("test")
+
 class User():
 
     def __init__(self):
