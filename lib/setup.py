@@ -23,11 +23,11 @@ def recovered_to_sql(engine):
     df.rename(columns={'Province/State':'province', 'Country/Region':'country', 'Lat':'latitude', 'Long':'longitude'}, inplace=True)
     df.to_sql('recovered', con=engine)
 
-def create_txtfile(password, Database_name):
+def create_txtfile(password, db_name):
     """
     Creates a txt file containing database name and password
     """
-    L = [f"{password}\n", f"{Database_name}\n"]
+    L = [f"{password}\n", f"{db_name}\n"]
     # Writing to file
     with open("pass_name.txt", "w") as f:
         f.writelines(L)
@@ -43,8 +43,8 @@ def read_txtfile():
             creds.append(line.strip())
 
     password = creds[0]
-    Database_name = creds[1]
-    return password, Database_name
+    db_name = creds[1]
+    return password, db_name
 
 if __name__ == "__main__":
 
