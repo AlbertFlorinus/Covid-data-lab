@@ -1,13 +1,14 @@
-from setup import sql_connect
+from setup import sql_connect, read_txtfile
 import matplotlib.pyplot as plt
 import numpy as np
+import datetime
 
 class User():
 
     def __init__(self):
-        password = str(input("SQL root password: "))
-        db_name = str(input("Name of database: "))
+        password, db_name = read_txtfile()
         self.engine = sql_connect(password, db_name)
+        self.inception = datetime.date(year=2020, month = 1, day=22)
 
     def select_country(self, nation):
         self.nation = nation
@@ -55,6 +56,38 @@ class User():
         plt.plot(x, y, color ="red") 
         plt.show()
 
+    def give_interval(self, category = "confirmed"):
+        """
+        This method is WIP
+        """
+        print("Enter dates in YYYY-MM-DD format ")
+
+        start = input('Enter Start Date: ')
+        year, month, day = map(int, start.split('-'))
+        date1 = datetime.date(year, month, day)
+
+        end = input('Enter End Date: ')
+        year, month, day = map(int, end.split('-'))
+        date2 = datetime.date(year, month, day)
+
+        #difference in days between starting date of interval and inception date of records
+        index_0 = abs(self.inception - date1).days
+
+        # (index_0 + 1) is added to the other difference in days to account for pythons indexing.
+        index_1 = abs(date1-date2).days + index_0 + 1
+
+        y = self.confirmed[index_0:index_1]
+
+        #timeline of interval chosen displayed on x-axis, (bad formatting atm!)
+        x = np.array([self.inception + datetime.timedelta(days=x) for x in range(0, (date2-self.inception).days+1)])
+
+        plt.title(f"{category} cases of {self.nation}") 
+        plt.xlabel("Days since 2020/01/22") 
+
+        plt.ylabel(f"{category} Cases") 
+        plt.plot(x, y, color ="red") 
+        plt.show()
+
 
 if __name__ == "__main__":
     #example, currently prone to errors if done in another order
@@ -63,5 +96,5 @@ if __name__ == "__main__":
     User1.get_country_conf()
     User1.get_country_deaths()
     User1.get_country_recovered()
-
+    #User1.give_interval()
     User1.plot_data(category="confirmed")
