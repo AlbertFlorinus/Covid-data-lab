@@ -42,9 +42,9 @@ def read_txtfile():
         for line in f:
             creds.append(line.strip())
 
-    Database_name = creds[0]
-    password = creds[1]
-    return Database_name, password
+    password = creds[0]
+    Database_name = creds[1]
+    return password, Database_name
 
 if __name__ == "__main__":
 
