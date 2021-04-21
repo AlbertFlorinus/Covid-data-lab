@@ -2,6 +2,8 @@ from setup import sql_connect, read_txtfile
 import matplotlib.pyplot as plt
 import numpy as np
 import datetime
+import plotly.express as px
+import pandas as pd
 
 class User():
 
@@ -19,6 +21,8 @@ class User():
         If theres multiple Provinces the numpy array is the columnwise sum of all provinces.
         """
         all_rows = np.array(self.engine.execute(f"SELECT * FROM confirmed where country like '{self.nation}'").fetchall())
+        #self.temp_df = pd.read_sql_table(self.engine.execute(f"SELECT * FROM confirmed where country like '{self.nation}'").fetchall(), con=self.engine)
+        self.temp_df = pd.read_sql_table("confirmed",con=self.engine)
         only_date_cols = all_rows[:,5:].astype(int)
         self.confirmed = np.sum(only_date_cols, axis = 0)
 
@@ -89,6 +93,21 @@ class User():
         plt.show()
 
 
+    def plot_data2(self, category = "confirmed"):
+        """
+        Testing needed to confirm dates match correctly,
+        as in day 60 is day 60 and not day 61 from sql.
+        """
+        # K returns data of category chosen
+        K = lambda category : self.confirmed if category.lower() == "confirmed" else (self.deaths if category.lower() == "deaths" else self.recovered)
+        y = K(category)
+
+        self.temp_df.rename(columns={'Province/State':'province', 'Country/Region':'country', 'Lat':'latitude', 'Long':'longitude'}, inplace=True)
+        #x = np.arange(0, y.size)
+        fig = px.scatter_geo(self.temp_df["4/20/21"], lat=self.temp_df["latitude"], lon=self.temp_df["longitude"], projection="natural earth", hover_name=self.temp_df["country"]+", confirmed cases", size=self.temp_df["4/10/21"])
+        #hover_name
+        fig.show()
+
 if __name__ == "__main__":
     #example, currently prone to errors if done in another order
     User1 = User()
@@ -97,4 +116,4 @@ if __name__ == "__main__":
     User1.get_country_deaths()
     User1.get_country_recovered()
     #User1.give_interval()
-    User1.plot_data(category="confirmed")
+    User1.plot_data2(category="confirmed")
