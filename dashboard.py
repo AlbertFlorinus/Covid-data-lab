@@ -6,6 +6,8 @@ import plotly.express as px
 import pandas as pd
 import datetime
 
+# Confirmed cases ----------------------------------------------
+
 # Downloading the data from github, will download the latest every time the applikation is starting
 df = pd.read_csv('https://raw.githubusercontent.com/CSSEGISandData/COVID-19/master/csse_covid_19_data/csse_covid_19_time_series/time_series_covid19_confirmed_global.csv')
 
@@ -23,9 +25,28 @@ df = df.groupby(['Date', 'Country'], as_index=False)['Confirmed'].sum()
 def get_data_from_country(country):
     return df.loc[df['Country'] == country]
 
+# Healthcare ----------------------------------------------
+raw_df = pd.read_json('https://www.svt.se/special/articledata/2532/alder_data.json')
+dic = {}
+
+for index in range(len(raw_df)):
+    dic[raw_df.iloc[index][1]['datum']] = [i for i in raw_df.iloc[index][1].values()]
+healthcare_df = pd.DataFrame.from_dict(dic, orient='index', columns=[i for i in raw_df.iloc[0][1]])
+
+def healthcare_graph(healthcare_df):
+    columns = []
+    for column in healthcare_df.columns:
+        if 'unika personer totalt' in column:
+            columns.append(column)
+    dates = healthcare_df.index
+    healthcare_fig = px.area(healthcare_df, x=dates, y=columns)
+    return healthcare_fig
+
 app = dash.Dash(__name__)
 
 app.layout = html.Div([
+	html.H1(
+    	'Covid Datalab'),
     dcc.Dropdown(
         id="country_menu",
         options=[{"label": x, "value": x} for x in df['Country'].unique()],
@@ -43,6 +64,9 @@ app.layout = html.Div([
     	reopen_calendar_on_clear=True,
     	end_date_placeholder_text="End"),
     dcc.Graph(id="confirmed_chart"),
+    html.H1(
+        'Healtcare'),
+    dcc.Graph(figure=healthcare_graph(healthcare_df))
 ])
 
 # Is triggered by an event, input is the value to the function, comed from the app layout
@@ -56,8 +80,17 @@ def update_graph(country, start_date, end_date):
 	end_date = datetime.datetime.strptime(end_date, "%Y-%m-%d").date()
 
 	dfc = get_data_from_country(country)
-	dfcc = dfc[(dfc['Date'] > start_date) & (dfc['Date'] <= end_date)]
+	dfcc = dfc[(dfc['Date'] >= start_date) & (dfc['Date'] <= end_date)]
 	fig = px.bar(dfcc, x='Date', y='Confirmed', title='Confirmed cases by country')
 	return fig
+
+
+
+
+
+
+
+
+
 
 app.run_server(debug=True)
