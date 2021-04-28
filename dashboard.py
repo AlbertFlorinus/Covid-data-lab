@@ -25,6 +25,9 @@ df = df.groupby(['Date', 'Country'], as_index=False)['Confirmed'].sum()
 def get_data_from_country(country):
     return df.loc[df['Country'] == country]
 
+date_list = df['Date'].unique()
+date_map = [i for i in range(len(date_list))]
+
 # Healthcare ----------------------------------------------
 raw_df = pd.read_json('https://www.svt.se/special/articledata/2532/alder_data.json')
 dic = {}
@@ -64,6 +67,14 @@ app.layout = html.Div([
     	reopen_calendar_on_clear=True,
     	end_date_placeholder_text="End"),
     dcc.Graph(id="confirmed_chart"),
+    html.Div(dcc.RangeSlider(
+        id='my-range-slider',
+        min=0,
+        max=date_map[-1],
+        step=1,
+        value=[0, date_map[-1]]
+    )),
+    html.Div(id='output-container-range-slider'),
     html.H1(
         'Healtcare'),
     dcc.Graph(figure=healthcare_graph(healthcare_df))
@@ -73,16 +84,18 @@ app.layout = html.Div([
 @app.callback(
     Output("confirmed_chart", "figure"), 
     [Input("country_menu", "value"),
-     Input("date_picker", "start_date"),
-     Input("date_picker", "end_date")])
-def update_graph(country, start_date, end_date):
-	start_date = datetime.datetime.strptime(start_date, "%Y-%m-%d").date()
-	end_date = datetime.datetime.strptime(end_date, "%Y-%m-%d").date()
+     Input("my-range-slider", "value")])
+def _update_graph(country, dates):
+	#start_date = datetime.datetime.strptime(start_date, "%Y-%m-%d").date()
+	#end_date = datetime.datetime.strptime(end_date, "%Y-%m-%d").date()
+    print(f'you have selected: {dates}')
+    start_date = date_list[dates[0]]
+    end_date = date_list[dates[1]]
 
-	dfc = get_data_from_country(country)
-	dfcc = dfc[(dfc['Date'] >= start_date) & (dfc['Date'] <= end_date)]
-	fig = px.bar(dfcc, x='Date', y='Confirmed', title='Confirmed cases by country')
-	return fig
+    dfc = get_data_from_country(country)
+    dfcc = dfc[(dfc['Date'] >= start_date) & (dfc['Date'] <= end_date)]
+    fig = px.bar(dfcc, x='Date', y='Confirmed', title='Confirmed cases by country')
+    return fig
 
 
 
