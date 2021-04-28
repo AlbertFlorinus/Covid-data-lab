@@ -42,9 +42,17 @@ def healthcare_graph(healthcare_df):
     healthcare_fig = px.area(healthcare_df, x=dates, y=columns)
     return healthcare_fig
 
+# Gives the total number of deaths worldwide at the last date in the dataframe df 
+def total_deaths_worldwide():
+    total_deaths = df[df['Date'] == df.iloc[-1][0]]['Confirmed'].sum()
+    return total_deaths
+
 app = dash.Dash(__name__)
 
 app.layout = html.Div([
+    html.H1(
+    f'Total number of deceased worldwide:{ total_deaths_worldwide() }'
+    ),
 	html.H1(
     	'Covid Datalab'),
     dcc.Dropdown(
