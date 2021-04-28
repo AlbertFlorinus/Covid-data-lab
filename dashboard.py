@@ -6,6 +6,11 @@ import plotly.express as px
 import pandas as pd
 import datetime
 
+from User_class import User
+
+#creating userinstance (with timeseries data format)
+user = User()
+
 # Confirmed cases ----------------------------------------------
 
 # Downloading the data from github, will download the latest every time the applikation is starting
@@ -25,9 +30,6 @@ df = df.groupby(['Date', 'Country'], as_index=False)['Confirmed'].sum()
 def get_data_from_country(country):
     return df.loc[df['Country'] == country]
 
-date_list = df['Date'].unique()
-date_map = [i for i in range(len(date_list))]
-
 # Healthcare ----------------------------------------------
 raw_df = pd.read_json('https://www.svt.se/special/articledata/2532/alder_data.json')
 dic = {}
@@ -45,11 +47,19 @@ def healthcare_graph(healthcare_df):
     healthcare_fig = px.area(healthcare_df, x=dates, y=columns)
     return healthcare_fig
 
+# Gives the total number of deaths worldwide at the last date in the dataframe df 
+def total_deaths_worldwide():
+    total_deaths = df[df['Date'] == df.iloc[-1][0]]['Confirmed'].sum()
+    return total_deaths
+
 app = dash.Dash(__name__)
 
 app.layout = html.Div([
-	html.H1(
-    	'Covid Datalab'),
+    html.H1(
+    f'Total number of deceased worldwide:{ total_deaths_worldwide() }'
+    ),
+    html.H1(
+        'Covid Datalab'),
     dcc.Dropdown(
         id="country_menu",
         options=[{"label": x, "value": x} for x in df['Country'].unique()],
@@ -57,40 +67,44 @@ app.layout = html.Div([
         value="Sweden"
     ),
     dcc.DatePickerRange(
-    	id='date_picker',
-    	day_size=40,
-    	min_date_allowed=list(df['Date'])[0],
-    	max_date_allowed=list(df['Date'])[-1],
-    	updatemode='singledate',
-    	start_date=list(df['Date'])[0],
-    	end_date=list(df['Date'])[-1],
-    	reopen_calendar_on_clear=True,
-    	end_date_placeholder_text="End"),
+        id='date_picker',
+        day_size=40,
+        min_date_allowed=list(df['Date'])[0],
+        max_date_allowed=list(df['Date'])[-1],
+        updatemode='singledate',
+        start_date=list(df['Date'])[0],
+        end_date=list(df['Date'])[-1],
+        reopen_calendar_on_clear=True,
+        end_date_placeholder_text="End"),
     dcc.Graph(id="confirmed_chart"),
-    html.Div(dcc.RangeSlider(
-        id='my-range-slider',
-        min=0,
-        max=date_map[-1],
-        step=1,
-        value=[0, date_map[-1]]
-    )),
-    html.Div(id='output-container-range-slider'),
     html.H1(
         'Healtcare'),
-    dcc.Graph(figure=healthcare_graph(healthcare_df))
-])
+    dcc.Graph(figure=healthcare_graph(healthcare_df)),
+
+    html.H1("World view"), 
+    dcc.Graph(id="world_map",figure=user.plot_world_data(category="confirmed")),
+    dcc.Dropdown(
+        id='Case_type',
+
+        #Hur löser vi flera outputs?
+        options=[{"label": "confirmed", "value": "confirmed"},
+                {"label": "deaths","value": "deaths"},
+                {"label": "recovered", "value": "recovered"}],
+
+        multi=False,
+        value="confirmed"
+    )])
 
 # Is triggered by an event, input is the value to the function, comed from the app layout
 @app.callback(
-    Output("confirmed_chart", "figure"), 
+    Output("confirmed_chart", "figure"),
     [Input("country_menu", "value"),
-     Input("my-range-slider", "value")])
-def _update_graph(country, dates):
-	#start_date = datetime.datetime.strptime(start_date, "%Y-%m-%d").date()
-	#end_date = datetime.datetime.strptime(end_date, "%Y-%m-%d").date()
-    print(f'you have selected: {dates}')
-    start_date = date_list[dates[0]]
-    end_date = date_list[dates[1]]
+     Input("date_picker", "start_date"),
+     Input("date_picker", "end_date")])
+
+def update_graph(country, start_date, end_date):
+    start_date = datetime.datetime.strptime(start_date, "%Y-%m-%d").date()
+    end_date = datetime.datetime.strptime(end_date, "%Y-%m-%d").date()
 
     dfc = get_data_from_country(country)
     dfcc = dfc[(dfc['Date'] >= start_date) & (dfc['Date'] <= end_date)]
