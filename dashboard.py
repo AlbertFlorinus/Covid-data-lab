@@ -6,6 +6,11 @@ import plotly.express as px
 import pandas as pd
 import datetime
 
+from User_class import User
+
+#creating userinstance (with timeseries data format)
+user = User()
+
 # Confirmed cases ----------------------------------------------
 
 # Downloading the data from github, will download the latest every time the applikation is starting
@@ -74,15 +79,29 @@ app.layout = html.Div([
     dcc.Graph(id="confirmed_chart"),
     html.H1(
         'Healtcare'),
-    dcc.Graph(figure=healthcare_graph(healthcare_df))
-])
+    dcc.Graph(figure=healthcare_graph(healthcare_df)),
+
+    html.H1("World view"), 
+    dcc.Graph(id="world_map",figure=user.plot_world_data(category="confirmed")),
+    dcc.Dropdown(
+        id='Case_type',
+
+        #Hur löser vi flera outputs?
+        options=[{"label": "confirmed", "value": "confirmed"},
+                {"label": "deaths","value": "deaths"},
+                {"label": "recovered", "value": "recovered"}],
+
+        multi=False,
+        value="confirmed"
+    )])
 
 # Is triggered by an event, input is the value to the function, comed from the app layout
 @app.callback(
-    Output("confirmed_chart", "figure"), 
+    Output("confirmed_chart", "figure"),
     [Input("country_menu", "value"),
      Input("date_picker", "start_date"),
      Input("date_picker", "end_date")])
+
 def update_graph(country, start_date, end_date):
 	start_date = datetime.datetime.strptime(start_date, "%Y-%m-%d").date()
 	end_date = datetime.datetime.strptime(end_date, "%Y-%m-%d").date()
