@@ -5,6 +5,7 @@ from dash.dependencies import Input, Output
 import plotly.express as px
 import pandas as pd
 import datetime
+import dash_bootstrap_components as dbc
 
 from User_class import User
 
@@ -64,13 +65,28 @@ def pi_graph(df):
     return fig
 
 
-def total_deaths_worldwide(df):
-    total_deaths = df[df['Date'] == df.iloc[-1][0]]['Confirmed'].sum()
-    return total_deaths
+def total_worldwide(df, category):
+    total = df[df['Date'] == df.iloc[-1][0]][category].sum()
+    return '{:,}'.format(total)
+
+
+def percent(df, category):
+    total = df[df['Date'] == df.iloc[-1][0]][category].sum()
+    return '{:,} %'.format(round((total/7862563200) * 100, 5))
 
 
 def get_data_from_country(country, df):
     return df.loc[df['Country'] == country]
+
+
+def card(name, number):
+    return dbc.Card([
+                dbc.CardHeader(name, style={'textAlign': 'center'}), 
+                dbc.CardBody(
+                    [
+                        html.H4(str(number))
+                    ], style={'textAlign': 'center'})
+                ])
 
 
 user = User()
@@ -102,47 +118,124 @@ for d in months:
     marks[date_list.index(d)] = f'{month_codes[d.month]} {d.year}'
 
 
-app = dash.Dash(__name__)
+app = dash.Dash(__name__, external_stylesheets=[dbc.themes.BOOTSTRAP])
 
-app.layout = html.Div([
-    html.H1('Covid Datalab'),
-    html.H3("Total number of deceased worldwide: {:,}".format(total_deaths_worldwide(df))),
-    dcc.Dropdown(
-        id="country_menu",
-        options=[{"label": x, "value": x} for x in df['Country'].unique()],
-        multi=False,
-        value="Sweden"),
-    dcc.Dropdown(
-        id="status_menu",
-        options=[{"label": "Confirmed", "value": "Confirmed"}, 
-                 {"label": "Deaths", "value": "Deaths"}, 
-                 {"label": "Active", "value": "Active"}],
-        multi=False,
-        value="Confirmed"),
-    dcc.Graph(id="confirmed_chart"),
-    html.Div(dcc.RangeSlider(
-        id='my-range-slider',
-        min=0,
-        max=date_map[-1],
-        step=1,
-        marks=marks,
-        value=[0, date_map[-1]])),
-    html.Div(id='output-container-range-slider'),
-    html.H1("World view"), 
-    dcc.Graph(id="world_map",figure=user.plot_world_data(category="confirmed")),
-    dcc.Dropdown(
-        id='Case_type',
-        options=[{"label": "confirmed", "value": "confirmed"},
-                {"label": "deaths","value": "deaths"},
-                {"label": "recovered", "value": "recovered"}],
+bar_controls = dbc.Card(
+    [
+        html.H3('Data based on Country'),
+        dbc.FormGroup(
+            [
+                dbc.Label("Country"),
+                dcc.Dropdown(
+                    id="country_menu",
+                    options=[{"label": x, "value": x} for x in df['Country'].unique()],
+                    multi=False,
+                    value="Sweden"),
+            ]
+        ),
+        dbc.FormGroup(
+            [
+                dbc.Label("Confirmed, Deaths or Active"),
+                dcc.Dropdown(
+                id="status_menu",
+                options=[{"label": "Confirmed", "value": "Confirmed"}, 
+                         {"label": "Deaths", "value": "Deaths"}, 
+                         {"label": "Active", "value": "Active"}],
+                multi=False,
+                value="Confirmed"),
+            ]
+        ),
+    ],
+    body=True,
+)
 
-        multi=False,
-        value="confirmed"
-    ),
-    html.H1('Healtcare'),
-    dcc.Graph(figure=healthcare_graph(healthcare_df)),
-    dcc.Graph(figure=pi_graph(healthcare_df))
-])
+
+app.layout = dbc.Container(
+    [
+        html.H2("COVID-19 DataLab", className='mt-2 mb-4'),
+        dbc.Row(
+            [   
+                dbc.Col([card('Global Cnfirmed', total_worldwide(df, 'Confirmed'))], md=3),
+                dbc.Col([card('Global Deaths', total_worldwide(df, 'Deaths'))], md=3),
+                dbc.Col([card('Global Confirmed', percent(df, 'Confirmed'))], md=3),
+                dbc.Col([card('Global Deaths', percent(df, 'Deaths'))], md=3)
+            ]
+        ),
+        html.Hr(),
+        dbc.Row(
+            [
+                dbc.Col(bar_controls, md=4),
+                dbc.Col(dcc.Graph(id="confirmed_chart"), md=8),
+            ], 
+        align="center"),
+
+        dbc.Row(
+            [
+                dbc.Col(
+                    [
+                        html.Div(dcc.RangeSlider(
+                        id='my-range-slider',
+                        min=0,
+                        max=date_map[-1],
+                        step=1,
+                        marks=marks,
+                        value=[0, date_map[-1]]))
+                    ]
+                )
+            ]
+        ),
+
+        html.Hr(),
+        dbc.Row(
+            [
+                dbc.Col(
+                    [   dbc.Card(
+                            [
+                                dbc.FormGroup(
+                                    [
+                                        html.H2("World view"),
+                                        dcc.Dropdown(
+                                        id='Case_type',
+                                        options=[{"label": "confirmed", "value": "confirmed"},
+                                                {"label": "deaths","value": "deaths"},
+                                                {"label": "recovered", "value": "recovered"}],
+
+                                        multi=False,
+                                        value="confirmed")
+                                    ]
+                                )
+                            ], body=True
+                        )
+                    ], 
+                md=4), 
+
+                dbc.Col(
+                    [
+                        dcc.Graph(id="world_map",figure=user.plot_world_data(category="confirmed"))
+                    ], 
+                md=8)
+
+            ], 
+        align='center'),
+        html.Hr(),
+        dbc.Row(
+            [
+                dbc.Col(
+                    [
+                        dcc.Graph(figure=healthcare_graph(healthcare_df))
+                    ],
+                md=6),
+                dbc.Col(
+                    [
+                        dcc.Graph(figure=pi_graph(healthcare_df))
+                    ],
+                md=6)
+            ]
+        )
+
+    ], fluid=False,
+)
+
 
 # Is triggered by an event, input is the value to the function, comed from the app layout
 @app.callback(
@@ -151,14 +244,12 @@ app.layout = html.Div([
      Input("status_menu", "value"),
      Input("my-range-slider", "value")])
 def _update_graph(country, status, dates):
-    #start_date = datetime.datetime.strptime(start_date, "%Y-%m-%d").date()
-    #end_date = datetime.datetime.strptime(end_date, "%Y-%m-%d").date()
     start_date = date_list[dates[0]]
     end_date = date_list[dates[1]]
 
     dfc = get_data_from_country(country, df)
     dfcc = dfc[(dfc['Date'] >= start_date) & (dfc['Date'] <= end_date)]
-    fig = px.bar(dfcc, x='Date', y=status, title='Confirmed cases by country')
+    fig = px.bar(dfcc, x='Date', y=status)
     return fig
 
 app.run_server(debug=True)
