@@ -13,6 +13,10 @@ class User():
         self.today = self.temporary.strftime('%m/%d/%Y')[1:]
         self.Curr_Date = self.today[:-4]+self.today[-2:]
 
+        #if date is < 10, removes the 0 infront to match the data
+        if self.Curr_Date[2] == "0":
+            self.Curr_Date = self.Curr_Date[0:2]+self.Curr_Date[3:]
+            
         #Colleting the three case categories data
         self.df_confirmed = pd.read_csv("https://raw.githubusercontent.com/CSSEGISandData/COVID-19/master/csse_covid_19_data/csse_covid_19_time_series/time_series_covid19_confirmed_global.csv")
         self.df_deaths = pd.read_csv("https://raw.githubusercontent.com/CSSEGISandData/COVID-19/master/csse_covid_19_data/csse_covid_19_time_series/time_series_covid19_deaths_global.csv")
@@ -30,4 +34,3 @@ class User():
         #Uses the coordinates to display correct locations on the worldmap.
         fig = px.scatter_geo(y[self.Curr_Date], lat=y["latitude"], lon=y["longitude"], projection="natural earth", hover_name=y["country"]+f", {category} cases", size=y[self.Curr_Date])
         return fig
-
