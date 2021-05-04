@@ -56,7 +56,7 @@ def create_global_data():
 
 def healthcare_graph(df):
     dates = healthcare_df.index
-    fig = px.line(df, x=dates, y=df.columns)
+    fig = px.line(df, x=dates , y=df.columns, title="Antalet unika vårdtillfällen per åldersgrupp")
     return fig
 
 

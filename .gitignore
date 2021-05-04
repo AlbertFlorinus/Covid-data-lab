@@ -13,3 +13,7 @@ __pycache__
 
 # Ignore .vscode
 .vscode
+
+.ipynb_checkpoints/
+Ivar_lab.ipynb
+Untitled.ipynb
