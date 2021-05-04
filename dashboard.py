@@ -28,7 +28,7 @@ def create_healthcare_data():
         
     df = pd.DataFrame.from_dict(dic, orient='index', columns=[i for i in df.iloc[0][1]])  
     for column in df.columns:
-        if 'totalt' in column and 'unika personer totAlt' not in column:
+        if 'totalt' in column and 'unika personer totalt' not in column:
             columns.append(column)
 
     columns.remove('100-109 totalt')
