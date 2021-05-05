@@ -211,7 +211,7 @@ app.layout = dbc.Container(
 
                 dbc.Col(
                     [
-                        dcc.Graph(id="world_map",figure=user.plot_world_data(category="confirmed"))
+                        dcc.Graph(id="world_map")
                     ], 
                 md=8)
 
@@ -251,6 +251,13 @@ def _update_graph(country, status, dates):
     dfcc = dfc[(dfc['Date'] >= start_date) & (dfc['Date'] <= end_date)]
     fig = px.bar(dfcc, x='Date', y=status)
     return fig
+
+@app.callback(
+    Output("world_map", "figure"),
+    [Input("Case_type", "value")])
+def update_world(type_of):
+    return user.plot_world_data(type_of)
+
 
 app.run_server(debug=True)
 

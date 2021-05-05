@@ -26,7 +26,7 @@ class User():
         #not used atm.
         self.nation = nation
     
-    def plot_world_data(self, category = "confirmed"):
+    def plot_world_data(self, category):
         K = lambda category : self.df_confirmed if category.lower() == "confirmed" else (self.df_deaths if category.lower() == "deaths" else self.df_recovered)
         y = K(category)
         y.rename(columns={'Province/State':'province', 'Country/Region':'country', 'Lat':'latitude', 'Long':'longitude'}, inplace=True)
